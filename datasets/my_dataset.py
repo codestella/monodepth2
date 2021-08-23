@@ -15,6 +15,7 @@ from PIL import Image  # using pillow-simd for increased speed
 import torch
 import torch.utils.data as data
 from torchvision import transforms
+import cv2
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning
@@ -23,7 +24,9 @@ def pil_loader(path):
         with Image.open(f) as img:
             return img.convert('RGB')
 
-
+def np_loader(path):
+    depth = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    return depth
 
 class MonoDataset(data.Dataset):
     """Superclass for monocular dataloaders
@@ -43,7 +46,6 @@ class MonoDataset(data.Dataset):
                  filenames,
                  height,
                  width,
-                 frame_idxs,
                  num_scales,
                  is_train=False,
                  img_ext='.jpg'):
@@ -56,12 +58,11 @@ class MonoDataset(data.Dataset):
         self.num_scales = num_scales
         self.interp = Image.ANTIALIAS
 
-        self.frame_idxs = frame_idxs
-
         self.is_train = is_train
         self.img_ext = img_ext
 
         self.loader = pil_loader
+        self.loader_d = np_loader
         self.to_tensor = transforms.ToTensor()
 
         # We need to specify augmentations differently in newer versions of torchvision.
@@ -140,25 +141,9 @@ class MonoDataset(data.Dataset):
         do_color_aug = self.is_train and random.random() > 0.5
         do_flip = self.is_train and random.random() > 0.5
 
-        line = self.filenames[index].split()
-        folder = line[0]
+        file_path = self.filenames[index]
 
-        if len(line) == 3:
-            frame_index = int(line[1])
-        else:
-            frame_index = 0
-
-        if len(line) == 3:
-            side = line[2]
-        else:
-            side = None
-
-        for i in self.frame_idxs:
-            if i == "s":
-                other_side = {"r": "l", "l": "r"}[side]
-                inputs[("color", i, -1)] = self.get_color(folder, frame_index, other_side, do_flip)
-            else:
-                inputs[("color", i, -1)] = self.get_color(folder, frame_index + i, side, do_flip)
+        inputs[("color", -1)] = self.get_color(file_path, do_flip)
 
         # adjusting intrinsics to match each scale in the pyramid
         for scale in range(self.num_scales):
@@ -180,22 +165,14 @@ class MonoDataset(data.Dataset):
 
         self.preprocess(inputs, color_aug)
 
+        """
         for i in self.frame_idxs:
-            del inputs[("color", i, -1)]
-            del inputs[("color_aug", i, -1)]
+            del inputs[("color",-1)]
+            del inputs[("color_aug",-1)]
+        """
 
-        if self.load_depth:
-            depth_gt = self.get_depth(folder, frame_index, side, do_flip)
-            inputs["depth_gt"] = np.expand_dims(depth_gt, 0)
-            inputs["depth_gt"] = torch.from_numpy(inputs["depth_gt"].astype(np.float32))
-
-        if "s" in self.frame_idxs:
-            stereo_T = np.eye(4, dtype=np.float32)
-            baseline_sign = -1 if do_flip else 1
-            side_sign = -1 if side == "l" else 1
-            stereo_T[0, 3] = side_sign * baseline_sign * 0.1
-
-            inputs["stereo_T"] = torch.from_numpy(stereo_T)
+        depth_gt = self.get_depth(file_path, do_flip)
+        inputs["depth_gt"] = depth_gt
 
         return inputs
 
