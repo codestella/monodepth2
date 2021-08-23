@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="stella@147.46.112.43:8022 password" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="stella@147.46.112.43:8022 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/stella/monodepth2" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
