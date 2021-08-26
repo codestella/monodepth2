@@ -12,10 +12,10 @@ import numpy as np
 import PIL.Image as pil
 
 from kitti_utils import generate_depth_map
-from .mono_dataset import MonoDataset
+from .my_dataset import MyDataset
 
 
-class TUMDataset(MonoDataset):
+class TUMDataset(MyDataset):
     """Superclass for different types of KITTI dataset loaders
     """
     def __init__(self, *args, **kwargs):
@@ -35,7 +35,7 @@ class TUMDataset(MonoDataset):
         self.side_map = {"2": 2, "3": 3, "l": 2, "r": 3}
 
     def get_color(self, file_path, do_flip):
-        img_path = os.path.join(self.data_path, "/rgb/", file_path, self.img_ext)
+        img_path = os.path.join(self.data_path, "rgb", file_path, self.img_ext)
         color = self.loader(img_path)
 
         if do_flip:

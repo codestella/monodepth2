@@ -28,7 +28,7 @@ def np_loader(path):
     depth = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
     return depth
 
-class MonoDataset(data.Dataset):
+class MyDataset(data.Dataset):
     """Superclass for monocular dataloaders
 
     Args:
@@ -49,7 +49,7 @@ class MonoDataset(data.Dataset):
                  num_scales,
                  is_train=False,
                  img_ext='.jpg'):
-        super(MonoDataset, self).__init__()
+        super(MyDataset, self).__init__()
 
         self.data_path = data_path
         self.filenames = filenames
